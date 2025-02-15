@@ -6,8 +6,8 @@ from groq import Groq
 app = Flask(__name__)
 
 # Environment Variables (Ensure these are set)
-BOT_TOKEN = '6165xxxx:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxrx8uo'
-GROQ_API_KEY = 'gsk_5xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxw9RPf'
+BOT_TOKEN = '6165xxxxx:xxxxxxxxxxxxxxxxxxxxxzrx8uo'
+GROQ_API_KEY = 'gsk_5rPxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx7w9RPf'
 
 if not BOT_TOKEN:
     raise ValueError("Bot token not found! Set the TELEGRAM_BOT_TOKEN environment variable.")
@@ -20,7 +20,7 @@ client = Groq(api_key=GROQ_API_KEY)
 
 BASE_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 # Replace with your actual HTTPS URL for production.
-WEBHOOK_URL = "https://free-camel-deadly.ngrok-free.app/webhook"
+WEBHOOK_URL = "https://telegramchatbot.pythonanywhere.com/webhook"
 
 def set_webhook():
     """Set the Telegram webhook."""
@@ -65,6 +65,7 @@ def transcribe_voice(file_name, file_content):
 def webhook():
     """Telegram webhook endpoint that handles text and voice messages."""
     update = request.get_json()
+    print('\n\n', update, '\n\n')
 
     if "message" in update:
         message = update["message"]
@@ -75,7 +76,6 @@ def webhook():
             voice = message["voice"]
             file_id = voice["file_id"]
 
-            # Retrieve file information from Telegram
             get_file_url = f"{BASE_URL}/getFile?file_id={file_id}"
             file_info_response = requests.get(get_file_url)
             file_info = file_info_response.json()
@@ -83,6 +83,8 @@ def webhook():
             if file_info.get("ok"):
                 file_path = file_info["result"]["file_path"]
                 download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+                print('\n\n', download_url, '\n\n')
                 file_response = requests.get(download_url)
                 file_content = file_response.content
 
@@ -92,11 +94,16 @@ def webhook():
                 send_message(chat_id, reply_text)
             else:
                 send_message(chat_id, "Sorry, could not retrieve the audio file.")
-        
-        # If it's a text message, generate an AI-based reply.
+
         elif "text" in message:
             message_text = message.get("text", "")
             reply_text = generate_reply(message_text)
+            send_message(chat_id, reply_text)
+
+        elif "sticker" in message:
+            sticker_info = message["sticker"]
+            emoji = sticker_info.get("emoji", "")
+            reply_text = generate_reply(emoji)
             send_message(chat_id, reply_text)
 
     return jsonify({"status": "ok"}), 200
