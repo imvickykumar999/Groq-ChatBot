@@ -240,6 +240,10 @@ def webhook(request):
                     reply_message = reply_text
                     download_file = download_url
 
+            else:
+                send_message(chat_id, 
+                    'https://blogforge.pythonanywhere.com/blogs/')
+
             try:
                 Chat.objects.create(
                     chat_id=chat_id,

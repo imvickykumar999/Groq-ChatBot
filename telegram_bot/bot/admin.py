@@ -15,3 +15,8 @@ class ChatAdmin(admin.ModelAdmin):
         return "No file"
     
     download_file_link.short_description = "Download file"  # Admin label
+
+    def get_fields(self, request, obj=None):
+        """Customize field order and remove 'download_file'"""
+        fields = super().get_fields(request, obj)
+        return [field for field in fields if field != "download_file"]  # Remove original field
