@@ -132,7 +132,7 @@ def webhook():
             file_name = document_info.get("file_name", "document")
             send_message(chat_id, f"Received a document: {file_name}")
 
-        if "poll" in message:
+        elif "poll" in message:
             poll = message["poll"]
             question = poll.get("question", "")
 
@@ -150,18 +150,18 @@ def webhook():
                 reply_text = generate_reply(venue_info)
                 send_message(chat_id, reply_text)
 
-        # elif "location" in message:
-        #     location = message["location"]
-        #     latitude = location.get("latitude", "")
-        #     longitude = location.get("longitude", "")
+        elif "location" in message:
+            location = message["location"]
+            latitude = location.get("latitude", "")
+            longitude = location.get("longitude", "")
 
-        #     coords = f'latitude: {latitude}, longitude: {longitude}'
-        #     reply_text = generate_reply(coords)
-        #     send_message(chat_id, reply_text)
+            coords = f'latitude: {latitude}, longitude: {longitude}'
+            reply_text = generate_reply(coords)
+            send_message(chat_id, reply_text)
 
-        # else:
-        #     send_message(chat_id, 
-        #         'https://blogforge.pythonanywhere.com/blogs/')
+        else:
+            send_message(chat_id, 
+                'https://blogforge.pythonanywhere.com/blogs/')
 
     return jsonify({"status": "ok"}), 200
 
