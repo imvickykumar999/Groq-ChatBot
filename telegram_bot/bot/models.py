@@ -7,6 +7,8 @@ class Chat(models.Model):
     last_name = models.CharField(max_length=255, blank=True, null=True)
     message_type = models.CharField(max_length=50)  # text, voice, sticker, etc.
     message_content = models.TextField()
+    reply_message = models.TextField(blank=True, null=True)
+    download_file = models.TextField(blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

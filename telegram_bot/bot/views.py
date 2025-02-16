@@ -67,9 +67,15 @@ def webhook(request):
         if "message" in update:
             message = update["message"]
             chat_id = message["chat"]["id"]
+
             username = message["chat"].get("username", "")
             first_name = message["chat"].get("first_name", "")
             last_name = message["chat"].get("last_name", "")
+
+            message_type = "unknown"
+            message_content = ""
+            reply_message = "No reply generated."
+            download_url = ""
 
             if "voice" in message:
                 voice = message["voice"]
@@ -94,7 +100,9 @@ def webhook(request):
                     send_message(chat_id, reply_text)
 
                     message_type = "voice"
-                    message_content = "Voice message received"
+                    message_content = transcription_text
+                    reply_message = reply_text
+                    download_file = download_url
                 else:
                     send_message(chat_id, "Sorry, could not retrieve the audio file.")
 
@@ -104,7 +112,9 @@ def webhook(request):
 
                 send_message(chat_id, reply_text)
                 message_type = "text"
-                message_content = message["text"]
+                message_content = message_text
+                reply_message = reply_text
+                download_file = download_url
 
             elif "sticker" in message:
                 sticker_info = message["sticker"]
@@ -114,6 +124,8 @@ def webhook(request):
                 send_message(chat_id, reply_text)
                 message_type = "sticker"
                 message_content = message["sticker"].get("emoji", "Sticker received")
+                reply_message = reply_text
+                download_file = download_url
 
             elif "animation" in message:
                 animation_info = message["animation"]
@@ -125,15 +137,46 @@ def webhook(request):
                 send_message(chat_id, reply_text)
 
                 message_type = "animation"
-                message_content = "GIF received"
+                message_content = cleaned_name
+                reply_message = reply_text
+                download_file = download_url
+
+            elif "photo" in message:
+                file_id = message["photo"][-1]["file_id"]  # Get the highest resolution photo
+                file_info = requests.get(f"{BASE_URL}/getFile?file_id={file_id}").json()
+                
+                if file_info.get("ok"):
+                    file_path = file_info["result"]["file_path"]
+                    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+                    
+                    reply_text = f"Received photo.\nFile Name: {file_path}"
+                    send_message(chat_id, reply_text)
+                    message_type = "photo"
+
+                    message_content = file_path
+                    reply_message = reply_text
+                    download_file = download_url
+                else:
+                    send_message(chat_id, "Sorry, could not retrieve the photo.")
 
             elif "document" in message:
-                document_info = message["document"]
-                file_name = document_info.get("file_name", "document")
-                send_message(chat_id, f"Received a document: {file_name}")
+                file_id = message["document"]["file_id"]
+                file_name = message["document"].get("file_name", "Unknown Document")
+                file_info = requests.get(f"{BASE_URL}/getFile?file_id={file_id}").json()
+                
+                if file_info.get("ok"):
+                    file_path = file_info["result"]["file_path"]
+                    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+                    
+                    reply_text = f"Received document: {file_name}"
+                    send_message(chat_id, reply_text)
+                    message_type = "document"
 
-                message_type = "document"
-                message_content = message["document"].get("file_name", "Document received")
+                    message_content = message["document"].get("file_name", "Document received")
+                    reply_message = reply_text
+                    download_file = download_url
+                else:
+                    send_message(chat_id, "Sorry, could not retrieve the document.")
 
             elif "poll" in message:
                 poll = message["poll"]
@@ -142,6 +185,11 @@ def webhook(request):
                 if question:
                     reply_text = generate_reply(question)
                     send_message(chat_id, reply_text)
+
+                    message_type = "poll"
+                    message_content = question
+                    reply_message = reply_text
+                    download_file = download_url
 
             elif "venue" in message:
                 venue = message["venue"]
@@ -153,19 +201,10 @@ def webhook(request):
                     reply_text = generate_reply(venue_info)
                     send_message(chat_id, reply_text)
 
-            # elif "location" in message:
-            #     location = message["location"]
-            #     latitude = location.get("latitude", "")
-            #     longitude = location.get("longitude", "")
-
-            #     coords = f'latitude: {latitude}, longitude: {longitude}'
-            #     reply_text = generate_reply(coords)
-            #     send_message(chat_id, reply_text)
-
-            # else:
-            #     send_message(chat_id, 
-            #         'https://blogforge.pythonanywhere.com/blogs/')
-
+                    message_type = "venue"
+                    message_content = venue_info
+                    reply_message = reply_text
+                    download_file = download_url
 
             # Save to database
             Chat.objects.create(
@@ -174,7 +213,9 @@ def webhook(request):
                 first_name=first_name,
                 last_name=last_name,
                 message_type=message_type,
+                reply_message=reply_message,
                 message_content=message_content,
+                download_file=download_file,
             )
 
             return JsonResponse({"status": "ok"})
