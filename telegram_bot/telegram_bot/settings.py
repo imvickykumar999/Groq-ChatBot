@@ -35,6 +35,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
 ]
 
+APPEND_SLASH = False
+
 # Application definition
 INSTALLED_APPS = [
     'jazzmin', # Add the jazzmin to better admin panel

@@ -75,6 +75,7 @@ def webhook(request):
             message_type = "unknown"
             message_content = ""
             reply_message = "No reply generated."
+            download_file = ""
             download_url = ""
 
             if "voice" in message:
@@ -127,6 +128,22 @@ def webhook(request):
                 reply_message = reply_text
                 download_file = download_url
 
+            elif "video_note" in message:
+                file_id = message["video_note"]["file_id"]
+                file_info = requests.get(f"{BASE_URL}/getFile?file_id={file_id}").json()
+
+                if file_info.get("ok"):
+                    file_path = file_info["result"]["file_path"]
+                    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+                    reply_text = f"Received video note.\nVideo Note: {file_path}"
+                    send_message(chat_id, reply_text)
+                    message_type = "video_note"
+
+                    message_content = file_path
+                    reply_message = reply_text
+                    download_file = download_url
+
             elif "animation" in message:
                 animation_info = message["animation"]
                 file_name = animation_info.get("file_name", "animation.gif")
@@ -149,7 +166,7 @@ def webhook(request):
                     file_path = file_info["result"]["file_path"]
                     download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
                     
-                    reply_text = f"Received photo.\nFile Name: {file_path}"
+                    reply_text = f"Received photo.\nPhoto Name: {file_path}"
                     send_message(chat_id, reply_text)
                     message_type = "photo"
 
@@ -158,6 +175,23 @@ def webhook(request):
                     download_file = download_url
                 else:
                     send_message(chat_id, "Sorry, could not retrieve the photo.")
+
+            elif "video" in message:
+                file_id = message["video"]["file_id"]
+
+                # Get file path
+                file_info = requests.get(f"{BASE_URL}/getFile?file_id={file_id}").json()
+                if file_info.get("ok"):
+                    file_path = file_info["result"]["file_path"]
+                    download_url = f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+                    reply_text = f"Received video.\nVideo Name: {file_path}"
+                    send_message(chat_id, reply_text)
+                    message_type = "video"
+
+                    message_content = file_path
+                    reply_message = reply_text
+                    download_file = download_url
 
             elif "document" in message:
                 file_id = message["document"]["file_id"]
@@ -206,17 +240,19 @@ def webhook(request):
                     reply_message = reply_text
                     download_file = download_url
 
-            # Save to database
-            Chat.objects.create(
-                chat_id=chat_id,
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                message_type=message_type,
-                reply_message=reply_message,
-                message_content=message_content,
-                download_file=download_file,
-            )
+            try:
+                Chat.objects.create(
+                    chat_id=chat_id,
+                    username=username,
+                    first_name=first_name,
+                    last_name=last_name,
+                    message_type=message_type,
+                    reply_message=reply_message,
+                    message_content=message_content,
+                    download_file=download_file,
+                )
+            except Exception as e:
+                print(e)
 
             return JsonResponse({"status": "ok"})
     return JsonResponse({"status": "error"}, status=400)
