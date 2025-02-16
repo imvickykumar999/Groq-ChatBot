@@ -102,7 +102,7 @@ def webhook():
 
                 transcription_text = transcribe_voice("voice.ogg", file_content)
                 print('\n\n', transcription_text, '\n\n')
-                
+
                 reply_text = generate_reply(transcription_text)
                 send_message(chat_id, reply_text)
             else:
@@ -132,9 +132,36 @@ def webhook():
             file_name = document_info.get("file_name", "document")
             send_message(chat_id, f"Received a document: {file_name}")
 
-        else:
-            send_message(chat_id, 
-                'https://blogforge.pythonanywhere.com/blogs/')
+        if "poll" in message:
+            poll = message["poll"]
+            question = poll.get("question", "")
+
+            if question:
+                reply_text = generate_reply(question)
+                send_message(chat_id, reply_text)
+
+        elif "venue" in message:
+            venue = message["venue"]
+            venue_title = venue.get("title", "")
+            venue_address = venue.get("address", "")
+
+            if venue_title or venue_address:
+                venue_info = f"Venue: {venue_title}\nAddress: {venue_address}"
+                reply_text = generate_reply(venue_info)
+                send_message(chat_id, reply_text)
+
+        # elif "location" in message:
+        #     location = message["location"]
+        #     latitude = location.get("latitude", "")
+        #     longitude = location.get("longitude", "")
+
+        #     coords = f'latitude: {latitude}, longitude: {longitude}'
+        #     reply_text = generate_reply(coords)
+        #     send_message(chat_id, reply_text)
+
+        # else:
+        #     send_message(chat_id, 
+        #         'https://blogforge.pythonanywhere.com/blogs/')
 
     return jsonify({"status": "ok"}), 200
 
