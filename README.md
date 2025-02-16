@@ -1,15 +1,8 @@
 ># `Groq-ChatBot`
 >
->```py
->  # telegram webhook works with sticker, text, audio
+>![image](https://github.com/user-attachments/assets/e17342c7-251c-476e-9174-46aa0e5620b3)
 >
->  elif "sticker" in message:
->      sticker_info = message["sticker"]
->      emoji = sticker_info.get("emoji", "")
->      reply_text = generate_reply(emoji)
->      send_message(chat_id, reply_text)
->```
+>![image](https://github.com/user-attachments/assets/8f95fd7b-d22b-4bcb-9f54-e5b09497a1ab)
 >
->## `API Metrics`
+>![image](https://github.com/user-attachments/assets/86160488-6a16-4b20-a0cc-fe52d8248995)
 >
->![image](https://github.com/user-attachments/assets/dd00b53a-3755-4e4c-afb6-db6a6aa4090d)
