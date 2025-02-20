@@ -7,10 +7,12 @@ from .models import Chat
 from pprint import pprint
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from gtts import gTTS
+from pydub import AudioSegment
+import io
 from dotenv import load_dotenv
-load_dotenv()
 
+load_dotenv()
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 X_RAPIDAPI_KEY = os.getenv("X_RAPIDAPI_KEY")
@@ -61,6 +63,37 @@ def transcribe_voice(file_name, file_content):
         return transcription.text
     except Exception as e:
         return "Sorry, I'm having trouble transcribing your audio."
+
+def text_to_speech(text):
+    """Converts text to an OGG audio file"""
+    try:
+        tts = gTTS(text=text, lang="en")
+        
+        # Save as MP3 in memory
+        mp3_fp = io.BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+
+        # Convert MP3 to OGG (Telegram supports OGG for voice messages)
+        audio = AudioSegment.from_file(mp3_fp, format="mp3")
+        ogg_fp = io.BytesIO()
+        audio.export(ogg_fp, format="ogg", codec="libopus")
+        ogg_fp.seek(0)
+
+        return ogg_fp
+    except Exception as e:
+        print(f"Error in text-to-speech conversion: {e}")
+        return None
+
+def send_voice(chat_id, audio_file):
+    """Sends an audio (voice message) to Telegram"""
+    url = f"{BASE_URL}/sendVoice"
+
+    files = {"voice": ("reply.ogg", audio_file, "audio/ogg")}
+    data = {"chat_id": chat_id}
+
+    response = requests.post(url, data=data, files=files)
+    return response.json()
 
 # https://rapidapi.com/JustMobi/api/twitter-downloader-download-twitter-videos-gifs-and-images/playground/apiendpoint_122abc35-1aef-4743-8f58-31b2d590f351
 def fetch_twitter_video_url(twitter_url):
@@ -121,7 +154,12 @@ def webhook(request):
                     print('\n\n', transcription_text, '\n\n')
 
                     reply_text = generate_reply(transcription_text)
-                    send_message(chat_id, reply_text)
+                    audio_response = text_to_speech(reply_text)
+                    
+                    if audio_response:
+                        send_voice(chat_id, audio_response)
+                    else:
+                        send_message(chat_id, reply_text)
 
                     message_type = "voice"
                     message_content = transcription_text
