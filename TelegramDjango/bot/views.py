@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+X_RAPIDAPI_KEY = os.getenv("X_RAPIDAPI_KEY")
 
 # ngrok http --url=monkey-related-kangaroo.ngrok-free.app 8000
 WEBHOOK_URL = "https://monkey-related-kangaroo.ngrok-free.app/webhook/"
@@ -62,7 +63,7 @@ def transcribe_voice(file_name, file_content):
 def fetch_twitter_video_url(twitter_url):
     api_url = f"https://twitter-downloader-download-twitter-videos-gifs-and-images.p.rapidapi.com/status?url={twitter_url}"
     headers = {
-        'x-rapidapi-key': '1dc9e6236dmshdfe058f825b062cp17212ejsnc424e02746a5',
+        'x-rapidapi-key': X_RAPIDAPI_KEY,
         'x-rapidapi-host': 'twitter-downloader-download-twitter-videos-gifs-and-images.p.rapidapi.com'
     }
 

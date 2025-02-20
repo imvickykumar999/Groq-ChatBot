@@ -51,6 +51,12 @@ INSTALLED_APPS = [
     'bot', # Add the bot app to the installed apps
 ]
 
+JAZZMIN_SETTINGS = {
+    "topmenu_links": [
+        {"name": "Reset Webhook", "url": "/", "new_window": True},
+    ]
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
