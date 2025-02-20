@@ -58,6 +58,25 @@ def transcribe_voice(file_name, file_content):
     except Exception as e:
         return "Sorry, I'm having trouble transcribing your audio."
 
+# https://rapidapi.com/JustMobi/api/twitter-downloader-download-twitter-videos-gifs-and-images/playground/apiendpoint_122abc35-1aef-4743-8f58-31b2d590f351
+def fetch_twitter_video_url(twitter_url):
+    api_url = f"https://twitter-downloader-download-twitter-videos-gifs-and-images.p.rapidapi.com/status?url={twitter_url}"
+    headers = {
+        'x-rapidapi-key': '1dc9e6236dmshdfe058f825b062cp17212ejsnc424e02746a5',
+        'x-rapidapi-host': 'twitter-downloader-download-twitter-videos-gifs-and-images.p.rapidapi.com'
+    }
+
+    response = requests.get(api_url, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        video_data = data.get("media", {}).get("video", {}).get("videoVariants", [])
+        
+        if video_data:
+            # Get the highest bitrate video URL
+            video_url = max(video_data, key=lambda x: x.get("bitrate", 0)).get("url")
+            return video_url
+    return "No downloadable video found."
+
 @csrf_exempt
 def webhook(request):
     if request.method == "POST":
@@ -109,13 +128,22 @@ def webhook(request):
 
             elif "text" in message:
                 message_text = message.get("text", "")
-                reply_text = generate_reply(message_text)
+                twitter_url_pattern = r'(https?://(?:www\.)?(?:twitter|x)\.com/[A-Za-z0-9_]+/status/\d+)'
+                match = re.search(twitter_url_pattern, message_text)
+                
+                if match:
+                    twitter_url = match.group(0)
+                    video_url = fetch_twitter_video_url(twitter_url)
+                    reply_text = f"Download video here:\n{video_url}"
+                else:
+                    reply_text = generate_reply(message_text)
+                    video_url = reply_text
 
                 send_message(chat_id, reply_text)
                 message_type = "text"
                 message_content = message_text
                 reply_message = reply_text
-                download_file = download_url
+                download_file = video_url
 
             elif "sticker" in message:
                 sticker_info = message["sticker"]
