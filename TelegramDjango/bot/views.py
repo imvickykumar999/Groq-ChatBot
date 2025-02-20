@@ -8,6 +8,9 @@ from pprint import pprint
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from dotenv import load_dotenv
+load_dotenv()
+
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 X_RAPIDAPI_KEY = os.getenv("X_RAPIDAPI_KEY")
