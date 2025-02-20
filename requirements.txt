@@ -1,5 +1,6 @@
 Django
 requests
 groq
+gtts
+pydub
 python-dotenv
-pprintpp
