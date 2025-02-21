@@ -4,3 +4,4 @@ groq
 gtts
 pydub
 python-dotenv
+langdetect

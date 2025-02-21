@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from gtts import gTTS
 from pydub import AudioSegment
 import io
+from langdetect import detect
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -64,10 +65,36 @@ def transcribe_voice(file_name, file_content):
     except Exception as e:
         return "Sorry, I'm having trouble transcribing your audio."
 
+# def text_to_speech(text):
+#     """Converts text to an OGG audio file"""
+#     try:
+#         tts = gTTS(text=text, lang="en")
+        
+#         # Save as MP3 in memory
+#         mp3_fp = io.BytesIO()
+#         tts.write_to_fp(mp3_fp)
+#         mp3_fp.seek(0)
+
+#         # Convert MP3 to OGG (Telegram supports OGG for voice messages)
+#         audio = AudioSegment.from_file(mp3_fp, format="mp3")
+#         ogg_fp = io.BytesIO()
+#         audio.export(ogg_fp, format="ogg", codec="libopus")
+#         ogg_fp.seek(0)
+
+#         return ogg_fp
+#     except Exception as e:
+#         print(f"Error in text-to-speech conversion: {e}")
+#         return None
+
 def text_to_speech(text):
-    """Converts text to an OGG audio file"""
+    """Detects language and converts text to an OGG audio file"""
     try:
-        tts = gTTS(text=text, lang="en")
+        # Detect the language of the input text
+        detected_lang = detect(text)
+        print(f"Detected Language: {detected_lang}")
+
+        # Convert text to speech in the detected language
+        tts = gTTS(text=text, lang=detected_lang)
         
         # Save as MP3 in memory
         mp3_fp = io.BytesIO()
@@ -197,12 +224,11 @@ def webhook(request):
                     print('\n\n', transcription_text, '\n\n')
 
                     reply_text = generate_reply(transcription_text)
+                    send_message(chat_id, reply_text)
                     audio_response = text_to_speech(reply_text)
                     
                     if audio_response:
                         send_voice(chat_id, audio_response)
-                    else:
-                        send_message(chat_id, reply_text)
 
                     message_type = "voice"
                     message_content = transcription_text
