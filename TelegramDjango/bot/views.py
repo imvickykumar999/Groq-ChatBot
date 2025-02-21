@@ -85,6 +85,49 @@ def text_to_speech(text):
         print(f"Error in text-to-speech conversion: {e}")
         return None
 
+# detects language then speak
+'''
+import io
+from gtts import gTTS
+from langdetect import detect
+from pydub import AudioSegment
+
+def text_to_speech(text):
+    """Detects language and converts text to an OGG audio file"""
+    try:
+        # Detect the language of the input text
+        detected_lang = detect(text)
+        print(f"Detected Language: {detected_lang}")
+
+        # Convert text to speech in the detected language
+        tts = gTTS(text=text, lang=detected_lang)
+        
+        # Save as MP3 in memory
+        mp3_fp = io.BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+
+        # Convert MP3 to OGG (Telegram supports OGG for voice messages)
+        audio = AudioSegment.from_file(mp3_fp, format="mp3")
+        ogg_fp = io.BytesIO()
+        audio.export(ogg_fp, format="ogg", codec="libopus")
+        ogg_fp.seek(0)
+
+        return ogg_fp
+    except Exception as e:
+        print(f"Error in text-to-speech conversion: {e}")
+        return None
+
+# Example Usage
+text = "नमस्ते, आप कैसे हैं?"  # Hindi text
+ogg_audio = text_to_speech(text)
+
+if ogg_audio:
+    with open("output.ogg", "wb") as f:
+        f.write(ogg_audio.getbuffer())
+    print("Audio saved as output.ogg")
+'''
+
 def send_voice(chat_id, audio_file):
     """Sends an audio (voice message) to Telegram"""
     url = f"{BASE_URL}/sendVoice"
